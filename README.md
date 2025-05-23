@@ -21,8 +21,3 @@ After cloning, navigate to the directory containing this README and run:
 ```shell
 pip install .
 ```
-
-### Stable version
-```shell
-pip install tifuun-sensitivity
-```
