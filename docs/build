@@ -1,0 +1,4 @@
+#!/bin/bash -eu
+
+sphinx-apidoc -efT -o docs/_apidoc tifuun_sensitivity
+sphinx-build -a docs docs/_build
