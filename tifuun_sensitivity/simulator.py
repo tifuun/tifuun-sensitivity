@@ -213,7 +213,7 @@ def calculator(
             
             # Also check, if this is first stage inside instrument -> assign to eta_window
             if eta_window_set == False:
-                eta_window = eta_stage
+                eta_window = average_over_filterbank(eta_stage, filterbank)
                 eta_window_set = True
 
             # Also, stop incorporating eta into eta_fwd
