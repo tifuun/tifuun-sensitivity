@@ -10,7 +10,7 @@ Currently it is mainly used to estimate the observation sensitivity of TIFUUN.
 ## Requirements
 
 - **Python:** 3.11 (tested by the authors)
-- **Dependencies:** See [pyproject.toml](https://github.com/tifuun-dev/tifuun-sensitivity/blob/v0.1.0/pyproject.toml)
+- **Dependencies:** See [pyproject.toml](https://github.com/tifuun-dev/tifuun-sensitivity/blob/main/pyproject.toml)
 
 - **Optional dependencies:** 
     - `nose2` for running the unittests
