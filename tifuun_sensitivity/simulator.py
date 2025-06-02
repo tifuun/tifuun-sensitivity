@@ -39,32 +39,17 @@ def calculator(
     Parameters
     ----------
     cascade_list
-        Dictionary containing cascades.
-    F
-        Frequency of the astronomical signal. Units: Hz.
+        List containing cascade stage dictionaries.
+    telescope_dict
+        Dictionary containing telescope specifications.
+    instrument_dict
+        Dictionary containing instrument specifications.
     pwv
         Precipitable water vapour. Units: mm.
-    EL
-        Telescope elevation angle. Units: degrees.
-    R
-        Spectral resolving power in F/W_F where W_F is equivalent bandwidth.
-        Units: None. See also: http://www.astrosurf.com/buil/us/spe2/hresol7.htm
-    eta_IBF
-        Fraction of the filter power transmission that is within the filter
-        channel bandwidth. Units: None. The rest of the power is cross talk,
-        picking up power that is in the bands of neighboring channels.
-        This efficiency applies to the coupling to astronomical line signals.
-        This efficiency does not apply to the coupling to continuum,
-        including the the coupling to the atmosphere for calculating the NEP.
-    KID_excess_noise_factor
-        Need to be documented. Units: None.
-    eta_ap
-        Aperture efficiency. Units: None.
-        Note that this is the aperture efficiency of the telescope, so not including lens antenna.
-    telescope_diameter
-        Diameter of the telescope. Units: m.
     Tb_cmb
-        Brightness temperature of the CMB. Units: K.
+        Brightness temperature of CMB. Units: K.
+    Tp_atm
+        Physical temperature of atmosphere. Units: K.
     snr
         Target signal to noise to be reached (for calculating the MDLF). Units: None.
     obs_hours
@@ -78,60 +63,31 @@ def calculator(
 
     Returns
     ----------
-    F
-        Same as input.
-    pwv
-        Same as input.
-    EL
-        Same as input
-    eta_atm
-        Atmospheric transmission. Units: None.
-    R
-        Same as input.
-    W_F_spec
-        Equivalent bandwidth within the bandwidth of F/R. Units: Hz.
-    W_F_cont
-        Equivalent bandwidth of 1 channel including the power coupled
-        outside of the filter channel band. Units: Hz.
-    theta_maj
-        Same as input.
-    theta_min
-        Same as input.
-    eta_a
-        Aperture efficiency. Units: None.
-        See also: https://deshima.kibe.la/notes/324
-    eta_mb
-        Main beam efficiency. Units: None.
-    eta_forward
-        Forward efficiency. Units: None.
-        See also: https://deshima.kibe.la/notes/324
-    eta_sw
-        Coupling efficiency from a point source to the cryostat window. Units: None.
-    eta_window
-        Transmission of the cryostat window. Units: None.
-    eta_inst
-        Instrument optical efficiency. Units: None.
-        See also: https://arxiv.org/abs/1901.06934
-    eta_circuit
-        Same as input.
-    Tb_sky
-        Planck brightness temperature of the sky. Units: K.
-    Pkid
-        Power absorbed by the KID. Units: W.
-    n_ph
-        Photon occupation number. Units: None.
-        See also: http://adsabs.harvard.edu/abs/1999ASPC..180..671R
-    NEPkid
-        Noise equivalent power at the KID with respect to the absorbed power.
-        Units: W Hz^0.5.
-    NEPinst
-        Instrumnet NEP. Units: W Hz^0.5.
-        See also: https://arxiv.org/abs/1901.06934
-    MDLF
-        Minimum Detectable Line Flux. Units: W/m^2.
-    equivalent_Trx
-        Equivalent receiver noise temperature. Units: K.
-        at the moment this assumes Rayleigh-Jeans!
+    Dictionary with output. It contains the following fields:
+        - "F_KID"         : Filter frequencies in GHz.
+        - "F_sky"         : Sky frequencies in GHz.
+        - "EL"            : Telescope elevation for calculation.
+        - "PWV"           : Precipitable water vapor for calculation.
+        - "R"             : Resolving power of filterbank.
+        - "filterbank"    : 2D array containing filterbank.
+        - "W_F_spec"      : Equivalent width of each filter, coupling to a spectral line.
+        - "W_F_cont"      : Equivalent width of each filter, coupling to continuum (so including out-of-band loading).
+        - "eta_atm"       : Transmission of atmopsphere, averaged over filterbank response.
+        - "eta_ap"        : Aperture efficiency, averaged over filterbank response.
+        - "eta_fwd"       : Forward efficiency, i.e. fraction of beam coupling to sky, averaged over filterbank response.
+        - "eta_sw"        : Total coupling of source to cryostat window, averaged over filterbank response.
+        - "eta_window"    : Total transmission efficiency of cryostat window, averaged over filterbank response.
+        - "eta_inst"      : Total instrument efficiency, averaged over filterbank response.
+        - "Tb_sky"        : Brightness temperature of the sky, averaged over filterbank response.
+        - "psd_KID"       : Power spectral density entering each KID, averaged over filterbank response.
+        - "P_KID"         : Power entering each KID.
+        - "NEP_KID"       : Noise equivalent power for each KID, at the KID itself.
+        - "NEP_inst"      : Noise equivalent power for each KID, evaluated at the cryostat window.
+        - "NEFD_line"     : Noise equivalent flux density for each KID, coupling to a spectral line.
+        - "NEFD_continuum": Noise equivalent flux density for each KID, coupling to continuum (so including out-of-band loading).
+        - "MDLF"          : Minimum detectable line flux, for each KID.
+        - "equivalent_Trx": Equivalent receiver noise temperature, for each KID, at the cryostat window.
+        - "n_ph"          : Photon occupation number, defined as number of photons arriving per coherence time, for each KID.
     """
 
     # Unpacking telescope dictionary

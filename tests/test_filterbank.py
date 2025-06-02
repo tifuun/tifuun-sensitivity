@@ -8,13 +8,12 @@ from tifuun_sensitivity import filterbank
 N_TEST = 100
 
 class Test_Filterbank(unittest.TestCase):
-    @params(1, 2, 3)
-    def test_Lorentzian(self, order):
+    def test_Lorentzian(self):
         gamma = np.ones(N_TEST)
         F = N_TEST
         F_sky = np.ones(N_TEST)
 
-        lorentzian = filterbank.Lorentzian(gamma, F_sky, F, order)
+        lorentzian = filterbank.Lorentzian(gamma, F_sky, F)
 
         self.assertEqual(lorentzian.size, F_sky.size)
 

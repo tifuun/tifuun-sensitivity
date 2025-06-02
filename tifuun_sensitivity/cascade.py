@@ -6,9 +6,18 @@ from .instruments import eta_Al_ohmic_850, photon_NEP_kid, window_trans
 from .physics import johnson_nyquist_psd
 
 def eta_Al_ohmic(F_sky: np.ndarray) -> np.ndarray: 
-    """Calculate Ohmic losses over array of sky frequencies.
-
+    """Calculate Ohmic losses for aluminium over array of sky frequencies.
+    
+    Parameters
+    ----------
+    F_sky
+        Numpy array containing sky frequencies. Units: GHz
+    
+    Returns
+    ----------
+    Array with eta values for Ohmic losses.
     """
+
     return 1.0 - (1.0 - eta_Al_ohmic_850) * np.sqrt(F_sky / 850)
 
 def sizer(eta: Union[np.ndarray, float], 
@@ -54,6 +63,27 @@ def sizer(eta: Union[np.ndarray, float],
 def get_cascade(cascade_list: List[Dict[any, any]],
                 F_sky: np.ndarray,
                 ) -> Tuple[np.ndarray, np.ndarray]:
+    """Calculate a cascade list, consisting of efficiency and psd per stage.
+
+    Parameters
+    ----------
+    cascade_list
+        List containing, per element, the efficiency and coupling temperature of each stage in the cascade.
+        For reflective stages, the dictionary should contain either:
+            - A single eta and temperature
+            - A tuple with efficiencies and frequencies at which these are defines, and a temperature
+        
+        For refractive stages, the dictionary should contain:
+            - thickness of dielectric in meters, loss tangent, effective refractive index, whether to use AR coating, temperature seen in reflection coming from the ISS, and temperature seen in refraction.
+
+    F_sky
+        Array with sky frequencies. Units: GHz.
+    
+    Returns
+    ----------
+    List with list of arrays containing efficiencies as first element, and list containing arrays of psd as second element. 
+    """
+
 
     group_list = []
     

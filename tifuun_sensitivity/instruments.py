@@ -110,18 +110,16 @@ def window_trans(
         Refractive index of HDPE. Set to 1 to remove reflections. Units : None.
     window_AR
         Whether the window is supposed to be coated by Ar (True) or not (False).
+    T_parasitic_refl
+        Temperature of parasitic source seen in reflection, w.r.t. instrument.
+    T_parasitic_refr
+        Temperature of parasitic source seen in refraction..
 
 
     Returns
     -------
-    psd_after_2nd_refl
-        PSD looking into the window from the cold optics.
-    eta_window
-        Transmission of the window. Units: None.
-
+    List containing list of arrays of efficiencies as first element, and list of arrays of psd's seen by each stage.
     """
-    # Parameters to calcualte the window (HDPE), data from Stephen
-    # reflection. ((1-neffHDPE)/(1+neffHDPE))^2. Set to 0 for Ar coated.
 
     eta = []
     psd = []
@@ -153,6 +151,19 @@ def window_trans(
 
 def average_over_filterbank(array_to_average: ArrayLike,
                             filterbank: ArrayLike) -> ArrayLike:
+    """Averages a quantity defined on F_sky over as filterbank.
+
+    Parameters
+    ----------
+    array_to_average
+        Array defined over F_sky to average
+    filterbank
+        2D array containing filterbank
+
+    Returns
+    -------
+    Averaged array.
+    """
     sh_f = filterbank.shape
     assert array_to_average.size == sh_f[0]
 
