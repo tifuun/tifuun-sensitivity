@@ -26,8 +26,8 @@ def calculator(
     pwv: float = 0.5,
     Tb_cmb: ArrayLike = 2.725,
     Tp_atm: float = 273,
-    snr: float = 5.0,
-    obs_hours: float = 1.0,
+    snr: float = 1.0,
+    obs_hours: float = 2*8.0,
     on_source_fraction: float = 0.4 * 0.9,
     on_off: bool = True
 ):
@@ -88,6 +88,7 @@ def calculator(
         - "MDLF"          : Minimum detectable line flux, for each KID.
         - "equivalent_Trx": Equivalent receiver noise temperature, for each KID, at the cryostat window.
         - "n_ph"          : Photon occupation number, defined as number of photons arriving per coherence time, for each KID.
+        - "W_F_cont"      : Continuum equivalent width.
     """
 
     # Unpacking telescope dictionary
@@ -112,12 +113,6 @@ def calculator(
     # #############################################################
     # 1. Calculating loading power absorbed by the KID, and the NEP
     # #############################################################
-
-    # .......................................................
-    # Efficiencies for calculating sky coupling
-    # .......................................................
-
-    # Ohmic loss as a function of frequency, from skin effect scaling
 
     if not hasattr(F, "__len__"):
         F = np.array([F])
@@ -215,6 +210,7 @@ def calculator(
                 eta_branches[i] *= eta_use
                 eta_use_flag = False
             else:
+                pass
                 eta_branches[i] *= eta_stage
 
     # Before averaging over filterbank, sum contribution over branches.
@@ -317,5 +313,6 @@ def calculator(
             "NEFD_continuum": continuum_NEFD,
             "MDLF"          : MDLF,
             "equivalent_Trx": Trx,
-            "n_ph"          : n_ph
+            "n_ph"          : n_ph,
+            "W_F_cont"      : W_F_cont
             }

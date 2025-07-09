@@ -74,5 +74,9 @@ def generateFilterbankFromR(R: Union[float, int],
     F_sky = np.tile(np.linspace(mu_low, mu_upp, nF_sky), (F.size, 1))
 
     filterbank = 4 / np.pi * Lorentzian(gamma, F_sky, F)
-
+    
+    #if cutoff := instrumentDict.get("cutoff") is not None:
+    print(F_sky[0,:])
+    filterbank[F_sky[0,:] < 90,:] = 0
+    
     return filterbank, F_sky[0,:], np.mean(np.diff(F_sky[0,:]))

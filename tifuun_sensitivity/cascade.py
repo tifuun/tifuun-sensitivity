@@ -139,9 +139,11 @@ def get_cascade(cascade_list: List[Dict[any, any]],
                 elif eta == "Ohmic-Al": # generate vector with eta of Aluminium
                     eta = eta_Al_ohmic(F_sky) 
 
-                if eta_interp_flag:
+                elif eta_interp_flag:
                     eta_grouped *= sizer(eta, F_sky, F_eta)
                 else:
+                    print(type(eta))
+                    print(eta)
                     eta_grouped *= sizer(eta, F_sky)
             
             all_eta.append(eta_grouped)

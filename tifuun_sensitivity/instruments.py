@@ -91,7 +91,7 @@ def window_trans(
     F: ArrayLike,
     thickness: ArrayLike,
     tandelta: float,
-    neffHDPE: float,
+    neff: float,
     window_AR: bool,
     T_parasitic_refl: float,
     T_parasitic_refr: float
@@ -106,8 +106,8 @@ def window_trans(
         Thickness of the HDPE window. Units: m.
     tandelta
         Loss tangent of window/lens dielectric.
-    neffHDPE
-        Refractive index of HDPE. Set to 1 to remove reflections. Units : None.
+    neff
+        Refractive index of window/lens dielectric. Set to 1 to remove reflections. Units : None.
     window_AR
         Whether the window is supposed to be coated by Ar (True) or not (False).
     T_parasitic_refl
@@ -124,27 +124,27 @@ def window_trans(
     eta = []
     psd = []
     
-    HDPErefl = ((1 - neffHDPE) / (1 + neffHDPE)) ** 2 * np.ones(F.size)
+    refl = ((1 - neff) / (1 + neff)) ** 2 * np.ones(F.size)
     psd_refl = johnson_nyquist_psd(F, T_parasitic_refl)
     psd_refr = johnson_nyquist_psd(F, T_parasitic_refr)
 
     if window_AR == False:
-        eta.append(1 - HDPErefl)
+        eta.append(1 - refl)
         psd.append(psd_refl)
 
-    eta_HDPE = np.exp(
+    eta_dielectric = np.exp(
         -thickness
         * 2
         * np.pi
-        * neffHDPE
+        * neff
         * (tandelta * F / c + (tandelta * F / c) ** 2)
     )
 
-    eta.append(eta_HDPE)
+    eta.append(eta_dielectric)
     psd.append(psd_refr)
 
     if window_AR == False:
-        eta.append(1 - HDPErefl)
+        eta.append(1 - refl)
         psd.append(psd_refl)
 
     return eta, psd
