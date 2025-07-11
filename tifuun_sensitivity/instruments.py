@@ -92,29 +92,28 @@ def window_trans(
     thickness: ArrayLike,
     tandelta: float,
     neff: float,
-    window_AR: bool,
+    AR: bool,
     T_parasitic_refl: float,
     T_parasitic_refr: float
 ) -> Tuple[ArrayLike, ArrayLike]:
-    """Calculates the window transmission.
+    """Calculates the transmission/reflection from dielectric elements, such as lenses and windows.
 
     Parameters
     ----------
     F
         Frequency. Units: Hz.
     thickness
-        Thickness of the HDPE window. Units: m.
+        Thickness of the lens/window. Units: m.
     tandelta
-        Loss tangent of window/lens dielectric.
+        Loss tangent of lens/window dielectric.
     neff
-        Refractive index of window/lens dielectric. Set to 1 to remove reflections. Units : None.
-    window_AR
-        Whether the window is supposed to be coated by Ar (True) or not (False).
+        Refractive index of lens/window dielectric. Units : None.
+    AR
+        Whether the lens/window is supposed to be coated by Anti-Reflective coating (True) or not (False).
     T_parasitic_refl
         Temperature of parasitic source seen in reflection, w.r.t. instrument.
     T_parasitic_refr
         Temperature of parasitic source seen in refraction..
-
 
     Returns
     -------
@@ -128,22 +127,17 @@ def window_trans(
     psd_refl = johnson_nyquist_psd(F, T_parasitic_refl)
     psd_refr = johnson_nyquist_psd(F, T_parasitic_refr)
 
-    if window_AR == False:
+    if AR == False:
         eta.append(1 - refl)
         psd.append(psd_refl)
-
-    eta_dielectric = np.exp(
-        -thickness
-        * 2
-        * np.pi
-        * neff
-        * (tandelta * F / c + (tandelta * F / c) ** 2)
-    )
+    
+    alpha = (2 * np.pi * F / c) * neff * tandelta
+    eta_dielectric = np.exp(-alpha * thickness)
 
     eta.append(eta_dielectric)
     psd.append(psd_refr)
 
-    if window_AR == False:
+    if AR == False:
         eta.append(1 - refl)
         psd.append(psd_refl)
 

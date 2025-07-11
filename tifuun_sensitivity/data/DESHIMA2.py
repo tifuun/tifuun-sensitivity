@@ -53,7 +53,7 @@ cascade_list = [
             {"thickness" : d, 
              "tandelta" : tandelta, 
              "neff" : neffHDPE,
-             "window_AR" : window_AR,
+             "AR" : window_AR,
              "T_parasitic_refl" : Tp_co,
              "T_parasitic_refr" : Tp_cabin,
              "cryo_window_flag" : True}, # Cryostat window

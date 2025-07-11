@@ -142,8 +142,6 @@ def get_cascade(cascade_list: List[Dict[any, any]],
                 elif eta_interp_flag:
                     eta_grouped *= sizer(eta, F_sky, F_eta)
                 else:
-                    print(type(eta))
-                    print(eta)
                     eta_grouped *= sizer(eta, F_sky)
             
             all_eta.append(eta_grouped)
@@ -158,7 +156,7 @@ def get_cascade(cascade_list: List[Dict[any, any]],
                                           casc.get("thickness"), 
                                           casc.get("tandelta"), 
                                           casc.get("neff"), 
-                                          casc.get("window_AR"), 
+                                          casc.get("AR"), 
                                           casc.get("T_parasitic_refl"), 
                                           casc.get("T_parasitic_refr")) 
 
