@@ -19,7 +19,7 @@ neffHDPE = 1.52
 window_AR = True
 #window_AR = False
 
-F0 = 220
+F0 = 220 * 1e9
 nF = 350
 R = 500
 F = F0 * (1 + 1/R)**np.arange(nF)

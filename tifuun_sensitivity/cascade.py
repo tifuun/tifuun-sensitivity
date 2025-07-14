@@ -122,7 +122,7 @@ def get_cascade(cascade_list: List[Dict[any, any]],
             if (T_casc := cascade_list[idx_group[0]].get("T_parasitic")) == "atmosphere":
                 all_psd.append(T_casc) # Group couples to atmosphere: calculate psd in rad trans loop.
             else:
-                all_psd.append(johnson_nyquist_psd(F_sky*1e9, T_casc)) # Calculate psd for T_parasitic
+                all_psd.append(johnson_nyquist_psd(F_sky, T_casc)) # Calculate psd for T_parasitic
 
             for idx_g in idx_group:
                 eta_interp_flag = False
@@ -152,7 +152,7 @@ def get_cascade(cascade_list: List[Dict[any, any]],
             for idx_g in idx_group:
                 if (casc := cascade_list[idx_g]).get("cryo_window_flag"):
                     eta_inst_flag = 1
-                etas, psds = window_trans(F_sky * 1e9,
+                etas, psds = window_trans(F_sky,
                                           casc.get("thickness"), 
                                           casc.get("tandelta"), 
                                           casc.get("neff"), 

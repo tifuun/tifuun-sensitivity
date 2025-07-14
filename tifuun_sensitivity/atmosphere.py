@@ -24,7 +24,7 @@ def eta_atm_func(
     ----------
     F
         Frequency of the astronomical signal.
-        Units: GHz.
+        Units: Hz.
     pwv
         Precipitable water vapour. Units: mm.
     EL
@@ -42,7 +42,7 @@ def eta_atm_func(
         header=0,
     )
     
-    x = eta_atm_df["F"].values
+    x = eta_atm_df["F"].values * 1e9
     y = np.array(list(eta_atm_df)[1:]).astype(np.float64)
     z = eta_atm_df.iloc[:, 1:].values
 

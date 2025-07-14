@@ -11,9 +11,9 @@ def Lorentzian(gamma: float,
     Parameters
     ----------
     gamma
-        FWHM of Lorentzian. Units: GHz.
+        FWHM of Lorentzian. Units: Hz.
     F_sky
-        Array with sky frequencies. Units: GHz.
+        Array with sky frequencies. Units: Hz.
     F
         Array with center frequencies of Lorentzians.
     
@@ -34,9 +34,9 @@ def generateFilterbankFromR(R: Union[float, int],
     R
         Resolving power of filterbank. Units: none.
     F
-        Array with filter frequencies. Units: GHz.
+        Array with filter frequencies. Units: Hz.
     thres
-        Threshold value to use in converge of F_sku
+        Threshold value to use in converge of F_sky
     
     Returns
     ----------
@@ -54,28 +54,21 @@ def generateFilterbankFromR(R: Union[float, int],
     area0 = 1e99
     area = 0
 
-    if F.size > 1:
-        while np.absolute(area0 - area) > thres:
-            nF_sky *= 2
-            F_sky = np.tile(np.linspace(mu_low, mu_upp, nF_sky), (2, 1))
-            dF_sky = np.mean(np.diff(F_sky, axis=-1))
-            filters = Lorentzian(gamma[0::F.size-1], F_sky, F[0::F.size-1])
-            area0 = area
-            area = np.sum(filters) * dF_sky
-    else:
-        while np.absolute(area0 - area) > thres:
-            nF_sky *= 2
-            F_sky = np.linspace(mu_low, mu_upp, nF_sky)
-            dF_sky = np.mean(np.diff(F_sky))
-            filters = Lorentzian(gamma[0], F_sky, F[0])
-            area0 = area
-            area = np.sum(filters) * dF_sky
+    check_a = lambda x, y : np.absolute((x - y) / x) - 1 > thres
+
+    while check_a(area0, area):
+        nF_sky *= 2
+        F_sky = np.tile(np.linspace(mu_low, mu_upp, nF_sky), (2, 1))
+        dF_sky = np.mean(np.diff(F_sky, axis=-1))
+        filters = Lorentzian(gamma[0::F.size-1], F_sky, F[0::F.size-1])
+        area0 = area
+        area = np.sum(filters)
 
     F_sky = np.tile(np.linspace(mu_low, mu_upp, nF_sky), (F.size, 1))
 
     filterbank = 4 / np.pi * Lorentzian(gamma, F_sky, F)
     
     #if cutoff := instrumentDict.get("cutoff") is not None:
-    filterbank[F_sky[0,:] < 90,:] = 0
+    filterbank[F_sky[0,:] < 90e9,:] = 0
     
     return filterbank, F_sky[0,:], np.mean(np.diff(F_sky[0,:]))

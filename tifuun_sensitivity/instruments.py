@@ -33,7 +33,7 @@ def D2HPBW(F: ArrayLike) -> ArrayLike:
         Half-power beam width. Units: radian.
 
     """
-    return 29.0 * 240.0 / (F / 1e9) * np.pi / 180.0 / 60.0 / 60.0
+    return 29.0 * 240.0 / F * np.pi / 180.0 / 60.0 / 60.0
 
 
 def eta_mb_ruze(F: ArrayLike, LFlimit: float, sigma: float) -> ArrayLike:

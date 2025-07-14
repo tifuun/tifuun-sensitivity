@@ -64,8 +64,8 @@ def calculator(
     Returns
     ----------
     Dictionary with output. It contains the following fields:
-        - "F_KID"         : Filter frequencies in GHz.
-        - "F_sky"         : Sky frequencies in GHz.
+        - "F_KID"         : Filter frequencies in Hz.
+        - "F_sky"         : Sky frequencies in Hz.
         - "EL"            : Telescope elevation for calculation.
         - "PWV"           : Precipitable water vapor for calculation.
         - "R"             : Resolving power of filterbank.
@@ -83,6 +83,7 @@ def calculator(
         - "P_KID"         : Power entering each KID.
         - "NEP_KID"       : Noise equivalent power for each KID, at the KID itself.
         - "NEP_inst"      : Noise equivalent power for each KID, evaluated at the cryostat window.
+        - "NET_sky"       : Noise equivalent temperature, evaluated before atmosphere. Units: K s^0.5
         - "NEFD_line"     : Noise equivalent flux density for each KID, coupling to a spectral line.
         - "NEFD_continuum": Noise equivalent flux density for each KID, coupling to continuum (so including out-of-band loading).
         - "MDLF"          : Minimum detectable line flux, for each KID.
@@ -105,15 +106,14 @@ def calculator(
     
     # Equivalent Bandwidth of 1 channel.
     # Used for calculating loading and coupling to a continuum source
-    W_F_cont = F*1e9 / R / eta_IBF
+    W_F_cont = F / R / eta_IBF
     # Used for calculating coupling to a line source,
     # with a linewidth not wider than the filter channel
-    W_F_spec = F*1e9 / R
+    W_F_spec = F / R
 
     # #############################################################
     # 1. Calculating loading power absorbed by the KID, and the NEP
     # #############################################################
-
     if not hasattr(F, "__len__"):
         F = np.array([F])
     
@@ -130,8 +130,8 @@ def calculator(
 
     eta_cascade, psd_cascade, use_for_eta_inst = get_cascade(cascade_list, F_sky)
                 
-    psd_in = johnson_nyquist_psd(F_sky*1e9, Tb_cmb)
-    psd_atm = johnson_nyquist_psd(F_sky*1e9, Tp_atm)
+    psd_in = johnson_nyquist_psd(F_sky, Tb_cmb)
+    psd_atm = johnson_nyquist_psd(F_sky, Tp_atm)
     
     # Start on branch 1, increment each time eta couples to "atmosphere". Set to zero when cryo window is encountered.
     branch_fwd = 1
@@ -184,8 +184,7 @@ def calculator(
 
 
     psd_KID = np.nansum(psd_running, axis=0) / np.nansum(filterbank, axis=0)
-    P_KID = np.nansum(psd_running, axis=0) * dF_sky * 1e9
-
+    P_KID = np.nansum(psd_running, axis=0) * dF_sky 
     n_branches = np.unique(index_branches).size - 1
 
     # Initialise branches
@@ -195,7 +194,6 @@ def calculator(
 
     branch_counter = 1
     eta_use_flag = False
-
     for idx_branch, eta_stage in zip(index_branches, eta_cascade):
         if idx_branch == 0:
             break
@@ -222,8 +220,10 @@ def calculator(
     # For eta_sw, also smooth eta_atm over filter response
     eta_atm = average_over_filterbank(eta_atm, filterbank) 
 
-    NEP = np.sqrt(np.nansum(photon_NEP_kid(F_sky[:,None]*1e9, psd_running), axis=0) * dF_sky * 1e9) * KID_excess_noise_factor
+    NEP = np.sqrt(np.nansum(photon_NEP_kid(F_sky[:,None], psd_running), axis=0) * dF_sky) * KID_excess_noise_factor
     NEP_inst = NEP / eta_inst  # Instrument NEP
+
+    
 
     # ##############################################################
     # 2. Calculating source coupling and sensitivtiy (MDLF and NEFD)
@@ -238,7 +238,7 @@ def calculator(
     #Ae = (c / (F/350)) ** 2 / omega_a  # Effective Aperture (m^2): lambda^2 / omega_a
     #eta_a = Ae / Ag  # Aperture efficiency
 
-    eta_ap = eta_mb_ruze(F*1e9, eta_ap, s_rms)
+    eta_ap = eta_mb_ruze(F, eta_ap, s_rms)
 
     # Coupling from the "S"ource to outside of "W"indow
     eta_pol = 0.5  # Instrument is single polarization
@@ -263,6 +263,8 @@ def calculator(
     if on_off:
         NEF *= np.sqrt(2)
 
+    NET = NEP / (np.sqrt(2) * eta_inst * eta_fwd * W_F_cont * k)
+
     # MDLF (Minimum Detectable Line Flux)
     # .........................................................
 
@@ -279,11 +281,11 @@ def calculator(
     # Equivalent Trx
     # .........................................................
 
-    Trx = NEP_inst / k / np.sqrt(2 * W_F_cont) - average_over_filterbank(T_from_psd(F_sky*1e9, psd_in_front_of_cryo), filterbank)  # assumes RJ!
+    Trx = NEP_inst / k / np.sqrt(2 * W_F_cont) - average_over_filterbank(T_from_psd(F_sky, psd_in_front_of_cryo), filterbank)  # assumes RJ!
 
     # Photon occupation number
     # .........................................................
-    n_ph = psd_KID / (h * F*1e9)
+    n_ph = psd_KID / (h * F)
 
     # ############################################
     # 3. Output results as dictionary
@@ -309,6 +311,7 @@ def calculator(
             "P_KID"         : P_KID,
             "NEP_KID"       : NEP,
             "NEP_inst"      : NEP_inst,
+            "NET_KID"       : NET,
             "NEFD_line"     : spectral_NEFD,
             "NEFD_continuum": continuum_NEFD,
             "MDLF"          : MDLF,
