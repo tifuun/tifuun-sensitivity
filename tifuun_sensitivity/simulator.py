@@ -311,7 +311,7 @@ def calculator(
             "P_KID"         : P_KID,
             "NEP_KID"       : NEP,
             "NEP_inst"      : NEP_inst,
-            "NET_KID"       : NET,
+            "NET_sky"       : NET,
             "NEFD_line"     : spectral_NEFD,
             "NEFD_continuum": continuum_NEFD,
             "MDLF"          : MDLF,
