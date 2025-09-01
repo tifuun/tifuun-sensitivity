@@ -14,7 +14,7 @@ A.  It is included in the main beam efficiency.
 """
 
 # flake8: noqa
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 
 # modules
@@ -22,6 +22,3 @@ from . import atmosphere
 from . import instruments
 from . import physics
 from . import simulator
-
-
-# aliases

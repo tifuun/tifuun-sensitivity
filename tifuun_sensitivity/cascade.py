@@ -1,4 +1,7 @@
 import numpy as np
+import os
+import yaml
+import csv
 
 from typing import List, Union, Dict, Tuple
 
@@ -60,8 +63,92 @@ def sizer(eta: Union[np.ndarray, float],
     else:
         return eta
 
+def read_from_folder(cascade_folder: str,
+                     yaml_name: str = "cascade.yaml"
+                     ) -> List[Dict[any, any]]:
+    """
+    Generate a cascade list from a cascade folder.
+    The folder should contain a YAML file containing the cascadelist.
+    Any vector-valued efficiency terms should be provided inside the folder as a CSV file, with the first column containing frequencies at which the terms are evaluated and the second column containing the terms themselves.
+    Then, the CSV can be referenced inside the YAML by passing the CSV name (including .csv) to the `eta_coup` field inside the YAML.
+
+    Parameters
+    ----------
+    cascade_folder
+        String containing path to folder containing cascade YAML and any related CSV files.
+
+    yaml_name
+        String containing the name of the YAML file containing the cascade.
+        Defaults to 'cascade.yaml'.
+
+    Returns
+    ----------
+    List containing the cascade.
+    """
+
+    assert(os.path.exists(cascade_folder))
+    assert(os.path.exists(yaml_path := os.path.join(cascade_folder, 
+                                       yaml_name)))
+
+    with open(yaml_path) as stream:
+        try:
+            cascade_list = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    for stage in cascade_list:
+        for key, item in stage.items():
+            if isinstance(item, str):
+                if item.endswith(".csv"):
+                    assert(os.path.exists(csv_path := os.path.join(cascade_folder,
+                                                                   item)))
+                    freq = []
+                    vals = []
+                    with open(csv_path, 'r', newline='') as csvfile:                
+                        reader = csv.reader(csvfile, delimiter=',')
+                        for row in reader:
+                            freq.append(float(row[0]))
+                            vals.append(float(row[1]))
+
+                    stage[key] = (np.array(freq), np.array(vals))
+
+    return cascade_list
+
+def save_cascade(cascade_list: List[Dict[any, any]],
+                 save_folder: str,
+                 yaml_name: str = "cascade") -> None:
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
+    name_index = 0
+
+    cascade_to_write = []
+
+    for stage in cascade_list:
+        stage_dict = {}
+
+        for key, item in stage.items():
+            if isinstance(item, tuple):
+                assert(item[0].size == item[1].size)
+                np.savetxt(os.path.join(save_folder, 
+                                        f"{name_index}.csv"), 
+                           np.column_stack(item),
+                           delimiter = ",")
+
+                stage_dict[key] = f"{name_index}.csv"
+                
+                name_index += 1
+
+            else:
+                stage_dict[key] = item
+
+        cascade_to_write.append(stage_dict)
+
+    with open(os.path.join(save_folder, f"{yaml_name}.yaml"), 'w') as outfile:
+              yaml.dump(cascade_to_write, outfile)
+
 def get_cascade(cascade_list: List[Dict[any, any]],
-                F_sky: np.ndarray,
+                F_sky: np.ndarray
                 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate a cascade list, consisting of efficiency and psd per stage.
 
@@ -71,7 +158,7 @@ def get_cascade(cascade_list: List[Dict[any, any]],
         List containing, per element, the efficiency and coupling temperature of each stage in the cascade.
         For reflective stages, the dictionary should contain either:
             - A single eta and temperature
-            - A tuple with efficiencies and frequencies at which these are defines, and a temperature
+            - A tuple with efficiencies and frequencies at which these are defined, and a temperature
         
         For refractive stages, the dictionary should contain:
             - thickness of dielectric in meters, loss tangent, effective refractive index, whether to use AR coating, temperature seen in reflection coming from the ISS, and temperature seen in refraction.
