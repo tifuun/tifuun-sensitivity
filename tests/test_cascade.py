@@ -5,14 +5,14 @@ from shutil import rmtree
 from tifuun_sensitivity import cascade
 from tifuun_sensitivity.data import DESHIMA2
 
-FOLDER = "_test"
+TESTFOLDER = "test"
 
 class Test_Cascade(unittest.TestCase):
     def test_yaml_write_read(self):
         cascade.save_cascade(DESHIMA2.cascade_list,
-                             FOLDER)        
+                             TESTFOLDER)        
 
-        test_list = cascade.read_from_folder(FOLDER)
+        test_list = cascade.read_from_folder(TESTFOLDER)
 
         for stage_ori, stage_load in zip(DESHIMA2.cascade_list, test_list):
             for key_ori, item_ori in stage_ori.items():
@@ -28,7 +28,7 @@ class Test_Cascade(unittest.TestCase):
                             self.assertAlmostEqual(item_ori, 
                                                    item_load)
 
-        rmtree(FOLDER)        
+        rmtree(TESTFOLDER)        
 
 if __name__ == "__main__":
     import nose2
