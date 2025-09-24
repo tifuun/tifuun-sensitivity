@@ -36,25 +36,24 @@ def D2HPBW(F: ArrayLike) -> ArrayLike:
     return 29.0 * 240.0 / F * np.pi / 180.0 / 60.0 / 60.0
 
 
-def eta_mb_ruze(F: ArrayLike, LFlimit: float, sigma: float) -> ArrayLike:
+def eta_ruze(F: ArrayLike, 
+             sigma: float) -> ArrayLike:
     """Get main-beam efficiency by Ruze's equation.
 
     Parameters
     ----------
     F
         Frequency. Units: Hz.
-    LFlimit
-        Main-beam efficiency at 0 Hz.
     sigma
         Surface error. Units: m.
 
     Returns
     -------
-    eta_mb
-        Main-beam efficiency. Units: None.
+    eta_ruze
+        Ruze efficiency. Units: None.
 
     """
-    return LFlimit * np.exp(-((4.0 * np.pi * sigma * F / c) ** 2.0))
+    return np.exp(-((4.0 * np.pi * sigma * F / c) ** 2.0))
 
 
 def photon_NEP_kid(F: ArrayLike, 

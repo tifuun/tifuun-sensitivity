@@ -83,7 +83,7 @@ instrument = {
 telescope = {               
         "D_tel"     : 10,   
         "s_rms"     : 42e-6,
-        "eta_ap"    : 0.7,  
+        "eta_taper" : 0.7,  
         "EL0"       : 60    
         }                   
 

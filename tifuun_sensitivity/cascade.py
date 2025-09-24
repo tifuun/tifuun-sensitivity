@@ -199,15 +199,18 @@ def get_cascade(cascade_list: List[Dict[any, any]],
     all_eta = []
     all_psd = []
     use_for_eta_inst = []
+    use_for_eta_ap = []
     eta_inst_flag = 0
 
     for casc_t, idx_group in zip(cascade_type_list_uniq, idx_group_list_uniq):
         # This cascade group is reflective
+        eta_ap_flag = 0
         if casc_t == 0:
             eta_grouped = np.ones(F_sky.size)
 
             if (T_casc := cascade_list[idx_group[0]].get("T_parasitic")) == "atmosphere":
                 all_psd.append(T_casc) # Group couples to atmosphere: calculate psd in rad trans loop.
+                eta_ap_flag = 1
             else:
                 all_psd.append(johnson_nyquist_psd(F_sky, T_casc)) # Calculate psd for T_parasitic
 
@@ -234,6 +237,7 @@ def get_cascade(cascade_list: List[Dict[any, any]],
             all_eta.append(eta_grouped)
             
             use_for_eta_inst.append(eta_inst_flag)
+            use_for_eta_ap.append(eta_ap_flag)
         
         if casc_t == 1:
             for idx_g in idx_group:
@@ -251,5 +255,6 @@ def get_cascade(cascade_list: List[Dict[any, any]],
                 all_psd.extend(psds)
         
                 use_for_eta_inst.extend([eta_inst_flag for _ in range(len(etas))])
+                use_for_eta_ap.extend([eta_ap_flag for _ in range(len(etas))])
     
-    return all_eta, all_psd, use_for_eta_inst
+    return all_eta, all_psd, use_for_eta_inst, use_for_eta_ap

@@ -9,7 +9,7 @@ from typing import List, Union, Dict
 import numpy as np
 import pandas as pd
 from .atmosphere import eta_atm_func
-from .instruments import eta_Al_ohmic_850, photon_NEP_kid, window_trans, average_over_filterbank, eta_mb_ruze
+from .instruments import eta_Al_ohmic_850, photon_NEP_kid, window_trans, average_over_filterbank, eta_ruze
 from .physics import johnson_nyquist_psd, rad_trans, T_from_psd, c, h, k
 from .filterbank import generateFilterbankFromR
 
@@ -73,7 +73,7 @@ def calculator(
         - "W_F_spec"      : Equivalent width of each filter, coupling to a spectral line.
         - "W_F_cont"      : Equivalent width of each filter, coupling to continuum (so including out-of-band loading).
         - "eta_atm"       : Transmission of atmopsphere, averaged over filterbank response.
-        - "eta_ap"        : Aperture efficiency, averaged over filterbank response.
+        - "eta_ap"        : Aperture efficiency, which is taper x Ruze x atmospherically coupled efficiencies, averaged over filterbank.
         - "eta_fwd"       : Forward efficiency, i.e. fraction of beam coupling to sky, averaged over filterbank response.
         - "eta_sw"        : Total coupling of source to cryostat window, averaged over filterbank response.
         - "eta_window"    : Total transmission efficiency of cryostat window, averaged over filterbank response.
@@ -95,7 +95,7 @@ def calculator(
     # Unpacking telescope dictionary
     D_tel = telescope_dict["D_tel"]
     s_rms = telescope_dict["s_rms"]
-    eta_ap = telescope_dict["eta_ap"]
+    eta_taper = telescope_dict["eta_taper"]
     EL = telescope_dict["EL0"]
 
     # Unpacking instrument dictionary
@@ -128,7 +128,7 @@ def calculator(
 
     eta_atm = np.squeeze(eta_atm_func(F=F_sky, pwv=pwv, EL=EL))
 
-    eta_cascade, psd_cascade, use_for_eta_inst = get_cascade(cascade_list, F_sky)
+    eta_cascade, psd_cascade, use_for_eta_inst, use_for_eta_ap = get_cascade(cascade_list, F_sky)
                 
     psd_in = johnson_nyquist_psd(F_sky, Tb_cmb)
     psd_atm = johnson_nyquist_psd(F_sky, Tp_atm)
@@ -137,8 +137,9 @@ def calculator(
     branch_fwd = 1
     index_branches = []
 
-    # Initialise array for eta_inst
+    # Initialise array for eta_inst and eta_ap
     eta_inst = np.ones(F_sky.size)
+    eta_ap = np.ones(F_sky.size)
     
     # Do first stage outside loop, is always the same anyways...
     psd_running = eta_atm * psd_in + (1 - eta_atm) *  psd_atm
@@ -161,6 +162,9 @@ def calculator(
         if use_for_eta_inst[idx]:
             # If stage is inside cryostat (including window), it counts towards eta_inst
             eta_inst *= eta_stage 
+        
+        if use_for_eta_ap[idx]:
+            eta_ap *= eta_stage 
             
             # Also check, if this is first stage inside instrument -> assign to eta_window
             if eta_window_set == False:
@@ -177,7 +181,7 @@ def calculator(
 
         if idx == len(eta_cascade) - 1:
             eta_stage = np.tile(eta_stage, F.size).reshape(filterbank.shape) * filterbank
-        
+
         psd_running = rad_trans(psd_running, psd_stage, eta_stage)
 
         index_branches.append(branch_fwd)
@@ -221,9 +225,7 @@ def calculator(
     eta_atm = average_over_filterbank(eta_atm, filterbank) 
 
     NEP = np.sqrt(np.nansum(photon_NEP_kid(F_sky[:,None], psd_running), axis=0) * dF_sky) * KID_excess_noise_factor
-    NEP_inst = NEP / eta_inst  # Instrument NEP
-
-    
+    NEP_inst = NEP / eta_inst  # Instrument NEP    
 
     # ##############################################################
     # 2. Calculating source coupling and sensitivtiy (MDLF and NEFD)
@@ -238,11 +240,19 @@ def calculator(
     #Ae = (c / (F/350)) ** 2 / omega_a  # Effective Aperture (m^2): lambda^2 / omega_a
     #eta_a = Ae / Ag  # Aperture efficiency
 
-    eta_ap = eta_mb_ruze(F, eta_ap, s_rms)
+    # Here, I define the illumination efficiency as the product of taper and Ruze efficiencies
+    eta_illum = eta_taper * eta_ruze(F_sky, s_rms)
+    
+    # Calculate aperture efficiency using illumination efficiency and accumulated stages that terminate on-sky
+    eta_ap *= eta_illum
+
+    eta_ap = average_over_filterbank(eta_ap, filterbank)
+    eta_illum = average_over_filterbank(eta_illum, filterbank)
 
     # Coupling from the "S"ource to outside of "W"indow
+    # Note that not the aperture but illumination efficiency are used, because the forward efficiency includes the stages going to atmosphere
     eta_pol = 0.5  # Instrument is single polarization
-    eta_sw = eta_pol * eta_atm * eta_ap * eta_fwd  # Source-Window coupling
+    eta_sw = eta_pol * eta_atm * eta_illum * eta_fwd  # Source-Window coupling
 
     # NESP: Noise Equivalent Source Power (an intermediate quantitiy)
     # .........................................................
