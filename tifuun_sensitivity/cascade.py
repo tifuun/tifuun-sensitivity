@@ -5,7 +5,7 @@ import csv
 
 from typing import List, Union, Dict, Tuple
 
-from .instruments import eta_Al_ohmic_850, photon_NEP_kid, window_trans
+from .instruments import eta_Al_ohmic_850, window_trans
 from .physics import johnson_nyquist_psd
 
 def eta_Al_ohmic(F_sky: np.ndarray) -> np.ndarray: 

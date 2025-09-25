@@ -56,35 +56,28 @@ def eta_ruze(F: ArrayLike,
     return np.exp(-((4.0 * np.pi * sigma * F / c) ** 2.0))
 
 
-def photon_NEP_kid(F: ArrayLike, 
+def photon_NEP2_kid(F: ArrayLike, 
                    psd_KID: ArrayLike) -> ArrayLike:
-    """NEP of the KID, with respect to the absorbed power.
+    """NEP squared of the KID, with respect to the absorbed power.
+    Note that the square of the NEP is returned, as this quantity is more convenient for the calculation.
+    Also, we do not multiply by dF here, as we do that further downstream outside of the integral.
 
     Parameters
     -----------
     F
         Frequency of the signal responsible for loading. Units: Hz.
-    psd_kid
+    psd_KID
         Power spectral density entering MKID the KID. Units: W / Hz.
-    filterbank
-        Detection bandwidth, with respect to the power that sets the loading. Units: Hz.
 
     Returns
     -------
-    NEP_kid
-        Noise-equivalent power of the KID.
-
-    Notes
-    -----
-    Pkid/(W_F * h * F) gives the occupation number.
-
+    NEP2_kid
+        Noise-equivalent power squared of the KID.
     """
-    # photon_term = 2 * Pkid * (h*F + Pkid/W_F)
     poisson_term = 2 * psd_KID * h * F
     bunching_term = 2 * psd_KID**2
     r_term = 4 * Delta_Al * psd_KID / eta_pb
     return poisson_term + bunching_term + r_term
-
 
 def window_trans(
     F: ArrayLike,

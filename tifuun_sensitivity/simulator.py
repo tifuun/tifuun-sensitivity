@@ -9,7 +9,7 @@ from typing import List, Union, Dict
 import numpy as np
 import pandas as pd
 from .atmosphere import eta_atm_func
-from .instruments import eta_Al_ohmic_850, photon_NEP_kid, window_trans, average_over_filterbank, eta_ruze
+from .instruments import eta_Al_ohmic_850, photon_NEP2_kid, window_trans, average_over_filterbank, eta_ruze
 from .physics import johnson_nyquist_psd, rad_trans, T_from_psd, c, h, k
 from .filterbank import generateFilterbankFromR
 
@@ -158,14 +158,14 @@ def calculator(
         if isinstance(psd_stage, str):
             psd_stage = (1 - eta_atm) * psd_atm
             branch_fwd += 1 
+        
+        if use_for_eta_ap[idx]:
+            eta_ap *= eta_stage     
 
         if use_for_eta_inst[idx]:
             # If stage is inside cryostat (including window), it counts towards eta_inst
             eta_inst *= eta_stage 
         
-        if use_for_eta_ap[idx]:
-            eta_ap *= eta_stage 
-            
             # Also check, if this is first stage inside instrument -> assign to eta_window
             if eta_window_set == False:
                 eta_window = average_over_filterbank(eta_stage, filterbank)
@@ -224,7 +224,7 @@ def calculator(
     # For eta_sw, also smooth eta_atm over filter response
     eta_atm = average_over_filterbank(eta_atm, filterbank) 
 
-    NEP = np.sqrt(np.nansum(photon_NEP_kid(F_sky[:,None], psd_running), axis=0) * dF_sky) * KID_excess_noise_factor
+    NEP = np.sqrt(np.nansum(photon_NEP2_kid(F_sky[:,None], psd_running), axis=0) * dF_sky) * KID_excess_noise_factor
     NEP_inst = NEP / eta_inst  # Instrument NEP    
 
     # ##############################################################
