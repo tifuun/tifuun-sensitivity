@@ -168,7 +168,7 @@ def calculator(
         
             # Also check, if this is first stage inside instrument -> assign to eta_window
             if eta_window_set == False:
-                eta_window = average_over_filterbank(eta_stage, filterbank)
+                eta_window = eta_stage
                 eta_window_set = True
 
             # Also, stop incorporating eta into eta_fwd
@@ -186,6 +186,8 @@ def calculator(
 
         index_branches.append(branch_fwd)
 
+    # Absorb eta_window in eta_inst as well
+    eta_inst *= eta_window
 
     psd_KID = np.nansum(psd_running, axis=0) / np.nansum(filterbank, axis=0)
     P_KID = np.nansum(psd_running, axis=0) * dF_sky 
@@ -219,7 +221,8 @@ def calculator(
     eta_fwd = average_over_filterbank(np.nansum(eta_branches, axis=0), filterbank) 
 
     # Average eta_inst over filter shapes
-    eta_inst = average_over_filterbank(eta_inst, filterbank) 
+    eta_inst = average_over_filterbank(eta_inst, filterbank)
+    eta_window = average_over_filterbank(eta_window, filterbank)
 
     # For eta_sw, also smooth eta_atm over filter response
     eta_atm = average_over_filterbank(eta_atm, filterbank) 
